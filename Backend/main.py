@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import numpy as np
 import cv2
+from fastapi.middleware.cors import CORSMiddleware
 
 # XAI Imports
 from pytorch_grad_cam import GradCAM, GradCAMPlusPlus, ScoreCAM, EigenCAM
