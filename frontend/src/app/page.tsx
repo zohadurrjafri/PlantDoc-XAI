@@ -33,10 +33,11 @@ export default function Home() {
     formData.append("file", selectedFile);
 
     try {
-      // Calling our FastAPI backend running on port 8000
+      // Calling our FastAPI backend running on Google Colab via Ngrok
       const response = await axios.post("https://neon-jolt-evil.ngrok-free.dev/predict", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          "ngrok-skip-browser-warning": "true", // <--- Yeh line add kar di hai
         },
       });
       setResult(response.data);
