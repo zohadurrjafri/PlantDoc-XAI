@@ -34,7 +34,7 @@ export default function Home() {
 
     try {
       // Calling our FastAPI backend running on port 8000
-      const response = await axios.post("https://plantdoc-api.onrender.com/predict", formData, {
+      const response = await axios.post("https://neon-jolt-evil.ngrok-free.dev/predict", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
