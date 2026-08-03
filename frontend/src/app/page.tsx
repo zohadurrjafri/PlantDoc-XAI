@@ -34,7 +34,7 @@ export default function Home() {
 
     try {
       // Calling our FastAPI backend running on Google Colab via Ngrok
-      const response = await axios.post("ttps://neon-jolt-evil.ngrok-free.dev/predict", formData, {
+      const response = await axios.post("https://neon-jolt-evil.ngrok-free.dev/predict", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           "ngrok-skip-browser-warning": "true", // <--- Yeh line add kar di hai
