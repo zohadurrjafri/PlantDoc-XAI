@@ -30,7 +30,7 @@ app.add_middleware(
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 num_classes = 10 # UPDATED to 10 classes
 
-# Sorted exact class names from your training data
+# Sorted exact class names from your training data (Jo AI predict karta hai)
 CLASS_NAMES = [
     "Blueberry leaf",
     "Corn leaf blight",
@@ -43,6 +43,20 @@ CLASS_NAMES = [
     "Tomato leaf bacterial spot",
     "Tomato leaf late blight"
 ]
+
+# NEW: Professional UI Mapping (Bimari ka asaal naam jo screen par dikhega)
+DISEASE_DICTIONARY = {
+    "Blueberry leaf": "Blueberry - Healthy (No Disease)",
+    "Corn leaf blight": "Corn - Northern Leaf Blight",
+    "Corn rust leaf": "Corn - Common Rust",
+    "Peach leaf": "Peach - Healthy (No Disease)",
+    "Potato leaf early blight": "Potato - Early Blight",
+    "Raspberry leaf": "Raspberry - Healthy (No Disease)",
+    "Squash Powdery mildew leaf": "Squash - Powdery Mildew",
+    "Tomato Septoria leaf spot": "Tomato - Septoria Leaf Spot",
+    "Tomato leaf bacterial spot": "Tomato - Bacterial Spot",
+    "Tomato leaf late blight": "Tomato - Late Blight"
+}
 
 model = models.mobilenet_v3_large(pretrained=False)
 in_ft = model.classifier[-1].in_features
@@ -101,7 +115,11 @@ async def predict_disease(
         probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]
         confidence, predicted_idx = torch.max(probabilities, 0)
     
-    predicted_disease = CLASS_NAMES[int(predicted_idx.item())]
+    # ---- YAHAN CHANGE HUA HAI ----
+    raw_folder_name = CLASS_NAMES[int(predicted_idx.item())]
+    predicted_disease = DISEASE_DICTIONARY[raw_folder_name]
+    # ------------------------------
+    
     heatmaps = {}
 
     # --- Generate XAI Heatmaps Logic ---
