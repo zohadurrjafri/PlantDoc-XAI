@@ -15,16 +15,34 @@ import cv2
 from pytorch_grad_cam import GradCAM, GradCAMPlusPlus, ScoreCAM, EigenCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image, preprocess_image
 
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request
+from fastapi.responses import Response
+
 app = FastAPI(title="Plant Disease XAI API")
 
-# Allow frontend to connect
+# Updated CORS Middleware with Explicit Headers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
+
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    if request.method == "OPTIONS":
+        response = Response(status_code=200)
+    else:
+        response = await call_next(request)
+        
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "false"
+    return response
 
 # --- 1. Load Model ---
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
