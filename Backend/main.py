@@ -107,6 +107,10 @@ def image_to_base64(img_array):
     img_pil.save(buff, format="JPEG")
     return base64.b64encode(buff.getvalue()).decode("utf-8")
 
+@app.get("/test-route")
+def test_connection():
+    return {"message": "Connection is working perfectly!"}
+
 @app.post("/predict")
 async def predict_disease(
     file: UploadFile = File(...),
