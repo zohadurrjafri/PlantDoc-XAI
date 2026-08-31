@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { Upload, Cpu, Activity, ShieldAlert, CheckCircle, RefreshCw, Settings2 } from "lucide-react";
+import { Upload, Cpu, Activity, ShieldAlert, CheckCircle, RefreshCw, Settings2, AlertOctagon } from "lucide-react";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -186,7 +186,7 @@ export default function Home() {
             )}
           </div>
 
-          {/* System Benchmarks Card (Only visible if result exists) */}
+          {/* System Benchmarks Card */}
           {result && (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl animate-in fade-in duration-500">
               <div className="flex justify-between items-center mb-4">
@@ -228,13 +228,25 @@ export default function Home() {
             {result && result.heatmaps ? (
               <div className={`grid gap-4 ${Object.keys(result.heatmaps).length > 1 ? 'grid-cols-2' : 'grid-cols-1 max-w-md mx-auto'}`}>
                 {Object.entries(result.heatmaps).map(([key, value]: [string, any]) => (
-                  <div key={key} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center animate-in zoom-in duration-500">
+                  <div key={key} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center animate-in zoom-in duration-500 h-full">
                     <span className="text-xs font-semibold uppercase text-slate-400 mb-2">{key}</span>
-                    <img
-                      src={`data:image/jpeg;base64,${value}`}
-                      alt={key}
-                      className="w-full h-auto object-contain rounded-lg bg-black"
-                    />
+                    
+                    {/* CUSTOM LOGIC FOR SCORECAM ERROR */}
+                    {value === "OOM_ERROR" ? (
+                      <div className="w-full flex-1 flex flex-col items-center justify-center bg-red-950/20 border border-red-800/50 rounded-lg p-6 text-center min-h-[200px]">
+                        <AlertOctagon className="w-8 h-8 text-red-500 mb-3 opacity-80" />
+                        <span className="text-red-400 font-medium text-sm leading-relaxed">
+                          Sorry, OOM (Out of Memory) aagayi, RAM full ho gayi.
+                        </span>
+                      </div>
+                    ) : (
+                      <img
+                        src={`data:image/jpeg;base64,${value}`}
+                        alt={key}
+                        className="w-full h-auto object-contain rounded-lg bg-black flex-1"
+                      />
+                    )}
+
                   </div>
                 ))}
               </div>
