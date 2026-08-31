@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { Upload, Cpu, Activity, ShieldAlert, CheckCircle, RefreshCw, Settings2, AlertOctagon } from "lucide-react";
+import { Upload, Cpu, Activity, ShieldAlert, RefreshCw, Settings2, AlertOctagon } from "lucide-react";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -11,11 +11,9 @@ export default function Home() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // NEW STATES FOR PRO MODE
   const [isProMode, setIsProMode] = useState(false);
   const [algorithm, setAlgorithm] = useState("Compare All");
 
-  // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -26,7 +24,6 @@ export default function Home() {
     }
   };
 
-  // Submit image to FastAPI Backend
   const handlePredict = async () => {
     if (!selectedFile) return;
 
@@ -54,9 +51,13 @@ export default function Home() {
     }
   };
 
+  // --- LOGIC FOR HANDLING SYSTEM CRASH (OOM) METRICS ---
+  const isOOM = result?.heatmaps?.ScoreCAM === "OOM_ERROR";
+  // Agar sirf ScoreCAM tha, toh poora process fail ho gaya maanenge (0 heatmaps successfully generated)
+  const isTotalCrash = isOOM && Object.keys(result.heatmaps).length === 1;
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10 font-sans">
-      {/* Header */}
       <header className="max-w-6xl mx-auto mb-10 border-b border-slate-800 pb-6 flex flex-col md:flex-row justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-emerald-400 flex items-center gap-2">
@@ -73,17 +74,15 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Container */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left Column: Upload & Settings */}
+        {/* LEFT COLUMN: UPLOAD */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Upload className="w-5 h-5 text-emerald-400" /> Upload Plant Leaf
             </h2>
 
-            {/* Dropzone Box */}
             <label className="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-950/50 transition-all group mb-6">
               {previewUrl ? (
                 <img src={previewUrl} alt="Preview" className="w-full h-48 object-cover rounded-lg shadow-md" />
@@ -96,7 +95,6 @@ export default function Home() {
               <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
             </label>
             
-            {/* TOGGLE PRO MODE */}
             <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -117,7 +115,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* ALGORITHM DROPDOWN */}
               {isProMode && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                   <label className="text-xs text-slate-400 mb-2 block">Select XAI Algorithm</label>
@@ -157,7 +154,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right Column: Results & XAI Heatmaps */}
+        {/* RIGHT COLUMN: RESULTS */}
         <div className="lg:col-span-2 space-y-6">
           
           {/* Prediction Card */}
@@ -170,12 +167,14 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
                   <span className="text-xs text-slate-400 uppercase tracking-wider">Detected Condition</span>
-                  <p className="text-2xl font-black text-emerald-400 mt-1">{result.prediction}</p>
+                  <p className={`text-2xl font-black mt-1 ${isTotalCrash ? 'text-slate-500' : 'text-emerald-400'}`}>
+                    {isTotalCrash ? "-" : result.prediction}
+                  </p>
                 </div>
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
                   <span className="text-xs text-slate-400 uppercase tracking-wider">AI Confidence</span>
-                  <p className="text-2xl font-black text-indigo-400 mt-1">
-                    {(result.confidence * 100).toFixed(2)}%
+                  <p className={`text-2xl font-black mt-1 ${isTotalCrash ? 'text-slate-500' : 'text-indigo-400'}`}>
+                    {isTotalCrash ? "-" : `${(result.confidence * 100).toFixed(2)}%`}
                   </p>
                 </div>
               </div>
@@ -201,18 +200,20 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
                   <span className="text-xs text-slate-400 block">Total Latency</span>
-                  <span className={`text-lg font-bold ${result.benchmarks.inference_time_ms > 3000 ? 'text-red-400' : 'text-amber-400'}`}>
-                    {result.benchmarks.inference_time_ms.toFixed(2)} ms
+                  <span className={`text-lg font-bold ${isOOM ? 'text-slate-500' : (result.benchmarks.inference_time_ms > 3000 ? 'text-red-400' : 'text-amber-400')}`}>
+                    {isOOM ? "-" : `${result.benchmarks.inference_time_ms.toFixed(2)} ms`}
                   </span>
                 </div>
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
                   <span className="text-xs text-slate-400 block">RAM Overhead</span>
-                  <span className="text-lg font-bold text-sky-400">{result.benchmarks.ram_usage_mb.toFixed(1)} MB</span>
+                  <span className={`text-lg font-bold ${isOOM ? 'text-slate-500' : 'text-sky-400'}`}>
+                    {isOOM ? "-" : `${result.benchmarks.ram_usage_mb.toFixed(1)} MB`}
+                  </span>
                 </div>
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
                   <span className="text-xs text-slate-400 block">CPU Spike</span>
-                  <span className={`text-lg font-bold ${result.benchmarks.cpu_percent > 30 ? 'text-red-400' : 'text-emerald-400'}`}>
-                    {result.benchmarks.cpu_percent}%
+                  <span className={`text-lg font-bold ${isOOM ? 'text-slate-500' : (result.benchmarks.cpu_percent > 30 ? 'text-red-400' : 'text-emerald-400')}`}>
+                    {isOOM ? "-" : `${result.benchmarks.cpu_percent}%`}
                   </span>
                 </div>
               </div>
@@ -231,12 +232,15 @@ export default function Home() {
                   <div key={key} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center animate-in zoom-in duration-500 h-full">
                     <span className="text-xs font-semibold uppercase text-slate-400 mb-2">{key}</span>
                     
-                    {/* CUSTOM LOGIC FOR SCORECAM ERROR */}
                     {value === "OOM_ERROR" ? (
                       <div className="w-full flex-1 flex flex-col items-center justify-center bg-red-950/20 border border-red-800/50 rounded-lg p-6 text-center min-h-[200px]">
                         <AlertOctagon className="w-8 h-8 text-red-500 mb-3 opacity-80" />
                         <span className="text-red-400 font-medium text-sm leading-relaxed">
-                          Sorry, OOM (Out of Memory) aagayi, RAM full ho gayi.
+                          Process Terminated: Out of Memory (OOM). 
+                          <br/>
+                          <span className="text-xs text-red-500/70 mt-1 block">
+                            System RAM allocation exceeded during ScoreCAM tensor computation.
+                          </span>
                         </span>
                       </div>
                     ) : (
